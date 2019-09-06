@@ -1,6 +1,6 @@
 # python-scripts
  
-<h2> video-html-generator.py </h2>
+<h2> video_html_generator.py </h2>
 <p>
 This script generates an html file based on a directory of mp4 videos. It recursively scans the source directory and generates a thumbnail for each video, uploading them to the dst folder. It creates a simple list of all the videos.
 

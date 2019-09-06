@@ -24,7 +24,7 @@ class VideoHtmlGenerator:
     def __init__(self, src_dir, dst_dir):
         self.video_files = []
 
-        self.video_root_dir = src_dir
+        self.video_root_dir         = src_dir
         self.web_server_dir         = dst_dir
         self.web_server_video_dir   = os.path.join(self.web_server_dir, 'videos')
 
@@ -57,6 +57,9 @@ class VideoHtmlGenerator:
 
         print ('Copying video files to ' + self.web_server_video_dir)
 
+        if not os.path.exists(self.web_server_video_dir):
+            os.mkdir(self.web_server_video_dir)
+            
         skipped = 0
         copied = 0
 
@@ -139,10 +142,10 @@ def main():
     parser.add_argument('-d','--dst',help='Directory where you are hosting your web server, where the generated web page will be copied.', required=True)
     args = parser.parse_args()
 
-    mp4_root_dir_arg = args.src
-    web_server_dir = args.dst
+    src = args.src
+    dst = args.dst
 
-    htmlGenerator = VideoHtmlGenerator(mp4_root_dir_arg, web_server_dir)
+    htmlGenerator = VideoHtmlGenerator(src, dst)
     htmlGenerator.generate()
 
 if __name__ == "__main__":

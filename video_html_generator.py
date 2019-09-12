@@ -146,7 +146,7 @@ class VideoHtmlGenerator:
 
             crontab_comment = 'Video HTML Generator script'
             script_path = os.path.realpath(__file__)
-            command = 'python3 ' + script_path +  ' --src ' + self.video_root_dir + ' --dst ' + self.web_server_dir  + ' > /home/alex/video_html_generator.log'
+            command = 'python3 ' + script_path +  ' --src ' + self.video_root_dir + ' --dst ' + self.web_server_dir
             print(command)
             my_cron = CronTab(user='alex')
             existing_cron_job = None

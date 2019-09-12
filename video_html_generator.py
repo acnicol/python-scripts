@@ -5,7 +5,7 @@
 #
 # Install ffmpeg for your platform
 # Install python3 and pip3
-# pip install ffmpy yattag
+# pip install ffmpy yattag python-crontab
 
 import os
 import time
@@ -21,17 +21,19 @@ class VideoHtmlGenerator:
 
     OVERWRITE_THUMBNAIL = False     
 
-    def __init__(self, src_dir, dst_dir):
+    def __init__(self, src_dir, dst_dir, cronjob_frequency):
         self.video_files = []
 
         self.video_root_dir         = src_dir
         self.web_server_dir         = dst_dir
         self.web_server_video_dir   = os.path.join(self.web_server_dir, 'videos')
+        self.cronjob_frequency = cronjob_frequency
 
     def generate(self):
         self.search_for_videos()
         self.copy_videos()
         self.generate_html()
+        self.setup_crontab()
 
     def search_for_videos(self):
 
@@ -59,7 +61,7 @@ class VideoHtmlGenerator:
 
         if not os.path.exists(self.web_server_video_dir):
             os.mkdir(self.web_server_video_dir)
-            
+
         skipped = 0
         copied = 0
 
@@ -130,22 +132,53 @@ class VideoHtmlGenerator:
 
                 ffmpeg_options = ['-loglevel', 'panic', '-y', '-ss', '00:00:5', '-vframes', '1', '-vf', "scale=iw/4:-1, drawtext=fontfile=/Library/Fonts/Verdana.ttf: text=" + last_mod_time + ": r=25: x=(w-tw)/2: y=h-(2*lh): fontsize=32: fontcolor=white: ", '-an']
                 ff = FFmpeg(inputs={video_path: None}, outputs={image_output_path: ffmpeg_options})
-                #print (ff.cmd)
+                # print (ff.cmd)
                 ffmpeg_result = ff.run()
+                # print(ffmpeg_result)
 
             except Exception as e: 
                 print(e)
+
+    def setup_crontab(self):
+
+        if (self.cronjob_frequency is not None):
+            from crontab import CronTab
+
+            crontab_comment = 'Video HTML Generator script'
+            script_path = os.path.realpath(__file__)
+            command = 'python3 ' + script_path +  ' --src ' + self.video_root_dir + ' --dst ' + self.web_server_dir  + ' > /home/alex/video_html_generator.log'
+            print(command)
+            my_cron = CronTab(user='alex')
+            existing_cron_job = None
+            for job in my_cron:
+                if job.comment == crontab_comment:
+                    print ('Updating existing cronjob')
+                    existing_cron_job = job
+
+            print('Crontab job command is ' + command)
+            if existing_cron_job is None:
+                print ('Creating new cronjob')
+                existing_cron_job = my_cron.new(command=command, comment=crontab_comment)
+            else:
+                existing_cron_job.set_command(command)
+                
+            existing_cron_job.minute.every(self.cronjob_frequency)
+             
+            my_cron.write()
+
 def main():
 
     parser = argparse.ArgumentParser(description='This script takes a source folder of mp4 files and generates a webpage.')# You can optionally add --dst to specify a directory where you would like to copy the files to (a web server dir).')
     parser.add_argument('-s','--src', help='Root directory where you have mp4 files stored.',required=True)
-    parser.add_argument('-d','--dst',help='Directory where you are hosting your web server, where the generated web page will be copied.', required=True)
+    parser.add_argument('-d','--dst', help='Directory where you are hosting your web server, where the generated web page will be copied.', required=True)
+    parser.add_argument('-c', '--cronjob', help='Add an entry to the crontab to start this script periodically.')
     args = parser.parse_args()
 
     src = args.src
     dst = args.dst
+    cronjob = args.cronjob
 
-    htmlGenerator = VideoHtmlGenerator(src, dst)
+    htmlGenerator = VideoHtmlGenerator(src, dst, cronjob)
     htmlGenerator.generate()
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ doc, tag, text = Doc().tagtext()
 
 class VideoHtmlGenerator:
 
-    HTML_FILENAME = 'index.html'
+    HTML_FILENAME = 'motion.html'
 
     OVERWRITE_THUMBNAIL = False     
 
